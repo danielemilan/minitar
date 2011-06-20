@@ -22,7 +22,6 @@ Gem::Specification.new do |s|
 
   s.test_files = %w{tests/testall.rb}
 
-  s.autorequire = %{archive/tar/minitar}
   s.require_paths = %w{lib}
 
   description = []
@@ -35,7 +34,6 @@ Gem::Specification.new do |s|
   end
   s.description = description[2..-1].join(" ")
 
-  s.has_rdoc = true
   s.rdoc_options = ["--title", "Archive::Tar::MiniTar -- A POSIX tarchive library", "--main", "README", "--line-numbers"]
   s.extra_rdoc_files = %w(README ChangeLog Install)
 end

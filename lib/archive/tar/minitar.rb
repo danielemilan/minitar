@@ -937,6 +937,69 @@ module Archive::Tar::Minitar
       end
     end
 
+      # A convenience method to packs the stream provided. 
+      # +entry+ must be a filename.
+      # +stream+ must be an StringIO object, the contents of which will be 
+      # stored in the tar file under the filename in +entry+.
+      # Optional arguments +opts+ must be an Hash with the fields:
+      #
+      # <tt>:mode</tt>::  The mode to be applied.
+      # <tt>:uid</tt>::   The user owner of the file. (Ignored on Windows.)
+      # <tt>:gid</tt>::   The group owner of the file. (Ignored on Windows.)
+      # <tt>:mtime</tt>:: The modification Time of the file.
+      #
+      # During packing, if a block is provided, #pack_stream yields an +action+
+      # Symbol, the full name of the file being packed, and a Hash of
+      # statistical information, just as with
+      # Archive::Tar::Minitar::Input#extract_entry.
+      #
+      # The +action+ will be one of:
+      # <tt>:dir</tt>::           The +entry+ is a directory.
+      # <tt>:file_start</tt>::    The +entry+ is a file; the extract of the
+      #                           file is just beginning.
+      # <tt>:file_progress</tt>:: Yielded every 4096 bytes during the extract
+      #                           of the +entry+.
+      # <tt>:file_done</tt>::     Yielded when the +entry+ is completed.
+      #
+      # The +stats+ hash contains the following keys:
+      # <tt>:current</tt>:: The current total number of bytes read in the
+      #                     +entry+.
+      # <tt>:currinc</tt>:: The current number of bytes read in this read
+      #                     cycle.
+      # <tt>:name</tt>::    The filename to be packed into the tarchive.
+      #                     *REQUIRED*.
+      # <tt>:mode</tt>::    The mode to be applied.
+      # <tt>:uid</tt>::     The user owner of the file. (+nil+ on Windows.)
+      # <tt>:gid</tt>::     The group owner of the file. (+nil+ on Windows.)
+      # <tt>:mtime</tt>::   The modification Time of the file.
+    def pack_stream(name, stream, outputter, opts = {}) #:yields action, name, stats:
+      outputter = outputter.tar if outputter.kind_of?(Archive::Tar::Minitar::Output)
+      
+      stats = {}
+      opts.each { |kk, vv| stats[kk] = vv unless vv.nil? }
+      
+      stats[:name] = name
+      stats[:mode] ||= 0100644
+      stats[:mtime] ||= Time.now
+      stats[:uid]  = nil
+      stats[:gid]  = nil
+      
+      name = name.sub(%r{\./}, '')
+      
+      stats[:size] = stream.size
+      
+      outputter.add_file_simple(name, stats) do |os|
+        stats[:current] = 0
+        yield :file_start, name, stats if block_given?
+        until stream.eof?
+          stats[:currinc] = os.write(stream.read(4096))
+          stats[:current] += stats[:currinc]
+          yield :file_progress, name, stats if block_given?
+        end
+        yield :file_done, name, stats if block_given?
+      end
+    end
+    
       # A convenience method to pack files specified by +src+ into +dest+. If
       # +src+ is an Array, then each file detailed therein will be packed into
       # the resulting Archive::Tar::Minitar::Output stream; if +recurse_dirs+

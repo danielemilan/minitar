@@ -2,7 +2,7 @@
 $LOAD_PATH.unshift('lib')
 
 require 'rubygems'
-require 'rake/gempackagetask'
+require 'rubygems/package_task'
 require 'rake/contrib/rubyforgepublisher'
 require 'archive/tar/minitar'
 require 'zlib'
@@ -45,13 +45,13 @@ task :test do |t|
   runner.run(suite)
 end
 
-spec = eval(File.read("archive-tar-minitar.gemspec"))
+spec = eval(File.read("minitar.gemspec"))
 desc "Build the RubyGem for Archive::Tar::Minitar."
-task :gem => [ :test ]
-Rake::GemPackageTask.new(spec) do |g|
-  g.need_tar    = false
-  g.need_zip    = false
-  g.package_dir = ".."
+task :gem => [ ]
+Gem::PackageTask.new(spec) do |pkg|
+  pkg.need_tar    = false
+  pkg.need_zip    = false
+  pkg.package_dir = ".."
 end
 
 desc "Build an Archive::Tar::Minitar .tar.gz distribution."
@@ -104,6 +104,7 @@ end
 task :signtar => [ :tar ] do
   sign TARDIST
 end
+
 task :signgem => [ :gem ] do
   sign "../#{DISTDIR}.gem"
 end

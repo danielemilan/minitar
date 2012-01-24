@@ -231,8 +231,8 @@ require 'find'
   # modified under the terms of the GPL version 2 (or later) or Ruby's
   # licence.
 module Archive::Tar::Minitar
-  VERSION = "0.5.2"
-
+  VERSION = "0.5.3"
+  
     # The exception raised when a wrapped data stream class is expected to
     # respond to #rewind or #pos but does not.
   class NonSeekableStream < StandardError; end
@@ -349,7 +349,7 @@ module Archive::Tar::Minitar
       remainder = (512 - (opts[:size] % 512)) % 512
       @io.write("\0" * remainder)
     end
-
+      
       # Adds a file to the archive as +name+. +opts+ must contain the
       # following value:
       #
@@ -895,7 +895,9 @@ module Archive::Tar::Minitar
 
       if entry.kind_of?(Hash)
         name = entry[:name]
-
+        as = entry[:as]
+        as ||= name
+        
         entry.each { |kk, vv| stats[kk] = vv unless vv.nil? }
       else
         name = entry
@@ -917,7 +919,8 @@ module Archive::Tar::Minitar
 
       case
       when File.file?(name)
-        outputter.add_file_simple(name, stats) do |os|
+        puts "Adding file as: #{as}"
+        outputter.add_file_simple(as, stats) do |os|
           stats[:current] = 0
           yield :file_start, name, stats if block_given?
           File.open(name, "rb") do |ff|

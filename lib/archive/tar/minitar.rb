@@ -231,7 +231,7 @@ require 'find'
   # modified under the terms of the GPL version 2 (or later) or Ruby's
   # licence.
 module Archive::Tar::Minitar
-  VERSION = "0.5.4"
+  VERSION = "0.5.5"
   
     # The exception raised when a wrapped data stream class is expected to
     # respond to #rewind or #pos but does not.
@@ -919,7 +919,6 @@ module Archive::Tar::Minitar
 
       case
       when File.file?(name)
-        puts "Adding file as: #{as}"
         outputter.add_file_simple(as, stats) do |os|
           stats[:current] = 0
           yield :file_start, name, stats if block_given?
